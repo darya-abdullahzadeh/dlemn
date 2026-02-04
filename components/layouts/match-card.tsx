@@ -1,4 +1,4 @@
-import { View, ViewProps, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, ViewProps, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { Image } from 'expo-image';
 import { LayoutPresets, BorderRadius } from '@/constants/layout';
 import { Card } from './card';
@@ -34,7 +34,7 @@ export function MatchCard({ imageUrl, name, onPress, style, ...props }: MatchCar
       {name && (
         <View style={styles.nameContainer}>
           <Card style={styles.nameCard} padding="xs" radius="sm">
-            {name}
+            <Text>{name}</Text>
           </Card>
         </View>
       )}

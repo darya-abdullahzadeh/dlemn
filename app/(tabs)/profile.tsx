@@ -23,6 +23,8 @@ export default function ProfileScreen() {
   // Update form when profile loads
   useEffect(() => {
     if (profile) {
+      console.log('[Profile Screen] Profile loaded:', profile);
+      console.log('[Profile Screen] Profile photo URL:', profile.profile_photo_url);
       setFormData({
         about: profile.about || '',
         interests: profile.interests?.join(', ') || '',
@@ -157,8 +159,15 @@ export default function ProfileScreen() {
                   {profile?.profile_photo_url ? (
                     <Image
                       source={{ uri: profile.profile_photo_url }}
-                      className="w-32 h-32 rounded-full"
+                      style={{ width: 128, height: 128, borderRadius: 64 }}
                       contentFit="cover"
+                      onError={(error) => {
+                        console.error('[Profile Screen] Image load error:', error);
+                        console.log('[Profile Screen] Failed URL:', profile.profile_photo_url);
+                      }}
+                      onLoad={() => {
+                        console.log('[Profile Screen] Image loaded successfully:', profile.profile_photo_url);
+                      }}
                     />
                   ) : (
                     <View className="w-32 h-32 rounded-full bg-gray-300 items-center justify-center">

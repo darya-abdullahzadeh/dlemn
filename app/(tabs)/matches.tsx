@@ -3,6 +3,7 @@ import { MatchCard } from '@/components/layouts/match-card';
 import { ThemedText } from '@/components/themed-text';
 import { useAuth } from '@/contexts/auth-context';
 import { getMatches, Match } from '@/lib/matches-service';
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 
@@ -77,10 +78,9 @@ export default function MatchesScreen() {
                 <MatchCard
                   key={match.id}
                   imageUrl={match.matched_user?.profile_photo_url}
-                  name={undefined} // TODO: Add name field to profiles table or use email
+                  name={match.matched_user?.location || 'Match'}
                   onPress={() => {
-                    // TODO: Navigate to match detail/chat
-                    console.log('Match pressed:', match.id);
+                    router.push(`/(tabs)/match/${match.id}`);
                   }}
                 />
               ))}

@@ -7,6 +7,7 @@ export interface UserProfile {
   profile_photo_url?: string;
   age?: number;
   location?: string;
+  name?: string; // Display name (extracted from email or location)
   created_at?: string;
   updated_at?: string;
 }

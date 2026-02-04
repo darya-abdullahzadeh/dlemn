@@ -1,4 +1,4 @@
-import { View, ViewProps, StyleSheet, Dimensions } from 'react-native';
+import { View, ViewProps, StyleSheet, Dimensions, Text } from 'react-native';
 import { Image } from 'expo-image';
 import { LayoutPresets, BorderRadius, Spacing } from '@/constants/layout';
 import { Card } from './card';
@@ -53,15 +53,17 @@ export function ProfileCard({
           {name && (
             <View style={styles.nameRow}>
               <Card style={styles.nameCard} padding="sm" radius="md">
-                {name}
-                {age && `, ${age}`}
+                <Text>
+                  {name}
+                  {age && `, ${age}`}
+                </Text>
               </Card>
             </View>
           )}
           {distance !== undefined && (
             <View style={styles.distanceRow}>
               <Card style={styles.distanceCard} padding="xs" radius="sm">
-                {distance} km away
+                <Text>{distance} km away</Text>
               </Card>
             </View>
           )}

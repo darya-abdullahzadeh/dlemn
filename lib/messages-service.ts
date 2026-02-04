@@ -57,6 +57,13 @@ export async function getConversations(): Promise<{ data: Conversation[] | null;
           .eq('id', otherUserId)
           .single();
 
+        // Get other user's email (we'll need to query auth.users via a different method)
+        // For now, use location as name fallback
+        const enrichedProfile = profile ? {
+          ...profile,
+          name: profile.location || 'User',
+        } : undefined;
+
         // Get last message
         const { data: messages } = await supabase
           .from('messages')
@@ -77,7 +84,7 @@ export async function getConversations(): Promise<{ data: Conversation[] | null;
 
         return {
           ...conv,
-          other_user: profile || undefined,
+          other_user: enrichedProfile,
           last_message: lastMessage,
           unread_count: count || 0,
         };
@@ -177,6 +184,144 @@ export async function sendMessage(
     return { data, error };
   } catch (error: any) {
     return { data: null, error: { message: error.message || 'Failed to send message' } };
+  }
+}
+
+/**
+ * Get a single conversation by ID
+ */
+export async function getConversation(
+  conversationId: string
+): Promise<{ data: Conversation | null; error: any }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return { data: null, error: { message: 'No authenticated user' } };
+    }
+
+    // Get conversation
+    const { data: conversation, error } = await supabase
+      .from('conversations')
+      .select('*')
+      .eq('id', conversationId)
+      .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+      .single();
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    // Enrich with other user's profile
+    const otherUserId = conversation.user1_id === user.id ? conversation.user2_id : conversation.user1_id;
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', otherUserId)
+      .single();
+
+    // Get last message
+    const { data: messages } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('conversation_id', conversation.id)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    const lastMessage = messages?.[0] || undefined;
+
+    // Get unread count
+    const { count } = await supabase
+      .from('messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('conversation_id', conversation.id)
+      .eq('sender_id', otherUserId)
+      .is('read_at', null);
+
+    // Create enriched profile with name (using location as display name)
+    const enrichedProfile = profile ? {
+      ...profile,
+      name: profile.location || 'User',
+    } : undefined;
+
+    return {
+      data: {
+        ...conversation,
+        other_user: enrichedProfile,
+        last_message: lastMessage,
+        unread_count: count || 0,
+      },
+      error: null,
+    };
+  } catch (error: any) {
+    return { data: null, error: { message: error.message || 'Failed to fetch conversation' } };
+  }
+}
+
+/**
+ * Get conversation by match ID (gets or returns existing conversation)
+ */
+export async function getConversationByMatchId(
+  matchId: string
+): Promise<{ data: Conversation | null; error: any }> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      return { data: null, error: { message: 'No authenticated user' } };
+    }
+
+    // Get conversation for this match
+    const { data: conversation, error } = await supabase
+      .from('conversations')
+      .select('*')
+      .eq('match_id', matchId)
+      .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+      .single();
+
+    if (error) {
+      // If conversation doesn't exist, it should have been created by trigger
+      // But if it wasn't, return error
+      return { data: null, error };
+    }
+
+    // Enrich with other user's profile
+    const otherUserId = conversation.user1_id === user.id ? conversation.user2_id : conversation.user1_id;
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', otherUserId)
+      .single();
+
+    // Get last message
+    const { data: messages } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('conversation_id', conversation.id)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    const lastMessage = messages?.[0] || undefined;
+
+    // Get unread count
+    const { count } = await supabase
+      .from('messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('conversation_id', conversation.id)
+      .eq('sender_id', otherUserId)
+      .is('read_at', null);
+
+    return {
+      data: {
+        ...conversation,
+        other_user: profile || undefined,
+        last_message: lastMessage,
+        unread_count: count || 0,
+      },
+      error: null,
+    };
+  } catch (error: any) {
+    return { data: null, error: { message: error.message || 'Failed to fetch conversation' } };
   }
 }
 

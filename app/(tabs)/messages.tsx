@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
-import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
+import { Card, Container, Row, Screen, Stack } from '@/components/layouts';
+import { ThemedText } from '@/components/themed-text';
+import { useAuth } from '@/contexts/auth-context';
+import { Conversation, getConversations } from '@/lib/messages-service';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { Screen, Container, Stack, Card, Row } from '@/components/layouts';
-import { ThemedText } from '@/components/themed-text';
-import { getConversations, Conversation } from '@/lib/messages-service';
-import { useAuth } from '@/contexts/auth-context';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
 
 export default function MessagesScreen() {
   const { user } = useAuth();
@@ -27,14 +27,21 @@ export default function MessagesScreen() {
     if (fetchError) {
       setError(fetchError);
     } else {
+      console.log('[Messages Screen] Conversations loaded:', data);
+      data?.forEach((conv, index) => {
+        console.log(`[Messages Screen] Conversation ${index}:`, {
+          id: conv.id,
+          other_user: conv.other_user?.id,
+          profile_photo_url: conv.other_user?.profile_photo_url,
+        });
+      });
       setConversations(data || []);
     }
     setLoading(false);
   };
 
   const handleConversationPress = (conversationId: string) => {
-    // TODO: Navigate to chat screen
-    router.push(`/messages/${conversationId}`);
+    router.push(`/(tabs)/messages/${conversationId}`);
   };
 
   const formatTimestamp = (timestamp: string | null) => {
@@ -100,12 +107,20 @@ export default function MessagesScreen() {
                   onPress={() => handleConversationPress(conversation.id)}>
                   <Card variant="elevated" padding="md">
                     <Row spacing="md" align="center">
-                      {conversation.other_user?.profile_photo_url && (
+                      {conversation.other_user?.profile_photo_url ? (
                         <Image
                           source={{ uri: conversation.other_user.profile_photo_url }}
-                          className="w-[50px] h-[50px] rounded-full"
+                          style={{ width: 50, height: 50, borderRadius: 25 }}
                           contentFit="cover"
+                          onError={(error) => {
+                            console.error('[Messages Screen] Image load error:', error);
+                            console.log('[Messages Screen] Failed URL:', conversation.other_user?.profile_photo_url);
+                          }}
                         />
+                      ) : (
+                        <View className="w-[50px] h-[50px] rounded-full bg-gray-300 items-center justify-center">
+                          <ThemedText className="text-lg">👤</ThemedText>
+                        </View>
                       )}
                       <Stack spacing="xs" className="flex-1">
                         <Row spacing="sm" justify="space-between" align="center">
