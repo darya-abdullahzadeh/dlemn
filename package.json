@@ -5,6 +5,8 @@
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
+    "import-mock-users": "node ./scripts/import-mock-users.js",
+    "test-match-trigger": "node ./scripts/test-match-trigger.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
@@ -51,6 +53,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
+    "dotenv": "^16.4.5",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "typescript": "~5.9.2"
